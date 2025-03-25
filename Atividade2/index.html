@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Nicolie&Grazielli</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ccffcb;
+        }
+        .error {
+            color: red;
+        }
+        .form-section {
+            margin-top: 20px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Sistema Calculadora</h1>
+
+<h2>Função de Cálculo</h2>
+<label for="num1">Número 1:</label>
+<input type="number" id="num1" required>
+
+<label for="num2">Número 2:</label>
+<input type="number" id="num2" required>
+
+<label for="operation">Operação:</label>
+<select id="operation" required>
+    <option value="">Selecione</option>
+    <option value="soma">Soma (+)</option>
+    <option value="subtracao">Subtração (-)</option>
+    <option value="multiplicacao">Multiplicação (*)</option>
+    <option value="divisao">Divisão (/)</option>
+</select>
+
+<p id="calc-result" class="error"></p>
+<button onclick="calculate()">Calcular</button>
+
+<h2>Validação de Formulário</h2>
+<p id="form-error" class="error"></p>
+<button onclick="fixFormValidation()">Corrigir Validação</button>
+
+<div class="form-section">
+    <h3>Documentação da Manutenção</h3>
+    <form id="maintenance-form">
+        <label for="date">Data da Manutenção:</label>
+        <input type="date" id="date" required>
+
+        <label for="error-type">Tipo de Manutenção:</label>
+        <input type="text" id="error-type" value="Corretiva" readonly>
+
+        <label for="description">Descrição da Manutenção:</label>
+        <textarea id="description" required></textarea>
+
+        <label for="responsible">Responsável:</label>
+        <input type="text" id="responsible" required>
+
+        <button type="button" onclick="generateReport()">Gerar Relatório</button>
+    </form>
+</div>
+
+<script>
+    function calculate() {
+        const num1 = parseFloat(document.getElementById("num1").value);
+        const num2 = parseFloat(document.getElementById("num2").value);
+        const operation = document.getElementById("operation").value;
+        let result;
+
+        if (isNaN(num1) || isNaN(num2) || operation === "") {
+            document.getElementById("calc-result").innerText = "Preencha todos os campos corretamente!";
+            return;
+        }
+
+        switch (operation) {
+            case "soma":
+                result = num1 + num2;
+                break;
+            case "subtracao":
+                result = num1 - num2;
+                break;
+            case "multiplicacao":
+                result = num1 * num2;
+                break;
+            case "divisao":
+                if (num2 === 0) {
+                    document.getElementById("calc-result").innerText = "Erro: divisão por zero!";
+                    return;
+                }
+                result = num1 / num2;
+                break;
+        }
+
+        document.getElementById("calc-result").innerText = "Resultado: " + result;
+    }
+
+    function fixFormValidation() {
+        const form = document.getElementById("maintenance-form");
+        if (!form.checkValidity()) {
+            document.getElementById("form-error").innerText = "Preencha todos os campos obrigatórios!";
+        } else {
+            document.getElementById("form-error").innerText = "Validação corrigida: Todos os campos estão preenchidos!";
+            document.getElementById("form-error").classList.remove("error");
+        }
+    }
+
+    function generateReport() {
+        const date = document.getElementById("date").value;
+        const description = document.getElementById("description").value;
+        const responsible = document.getElementById("responsible").value;
+
+        if (!date || !description || !responsible) {
+            document.getElementById("form-error").innerText = "Preencha todos os campos obrigatórios!";
+            return;
+        }
+
+        alert(`Relatório de Manutenção\nData: ${date}\nTipo: Corretiva\nDescrição: ${description}\nResponsável: ${responsible}`);
+    }
+</script>
+
+</body>
+</html>
