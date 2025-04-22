@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Loja de Acessórios Norte</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="stylesheet" href="styles.css">
+
+</head>
+<body>
+  <h1>Loja de Acessórios Norte</h1>
+
+  <!-- Login -->
+  <section id="telaLogin">
+    <h2>Login</h2>
+    <input type="text" id="loginUsuario" placeholder="Usuário" required />
+    <input type="password" id="loginSenha" placeholder="Senha" required />
+    <button onclick="login()">Entrar</button>
+    <p>Não tem conta? <a href="#" onclick="mostrar('cadastro')">Cadastre-se</a></p>
+  </section>
+
+  <!-- Cadastro -->
+  <section id="telaCadastro">
+    <h2>Cadastro de Usuário</h2>
+    <input type="text" id="cadUsuario" placeholder="Novo usuário" required />
+    <input type="password" id="cadSenha" placeholder="Senha" required />
+    <button onclick="cadastrar()">Cadastrar</button>
+    <p>Já tem conta? <a href="#" onclick="mostrar('login')">Fazer login</a></p>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="telaDashboard">
+    <h2>Gerenciar Produtos</h2>
+    
+
+    <input type="hidden" id="idProduto" />
+    <input type="text" id="nome" placeholder="Nome do produto" required />
+    <input type="number" id="preco" placeholder="Preço" required />
+    <input type="number" id="quantidade" placeholder="Quantidade" required />
+    <button onclick="salvarProduto()">Salvar</button>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Preço</th>
+          <th>Quantidade</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaProdutos"></tbody>
+    </table>
+    <button onclick="gerarPDF()">📄 Baixar Relatório PDF</button>
+    <button onclick="logout()">Sair</button>
+  </section>
+
+  <script>
+    const usuariosKey = "acessoriosNorte_usuarios";
+    const loginKey = "acessoriosNorte_logado";
+    const produtosKey = "acessoriosNorte_produtos";
+    let produtos = JSON.parse(localStorage.getItem(produtosKey)) || [];
+
+    function mostrar(tela) {
+      document.getElementById("telaLogin").style.display = tela === "login" ? "block" : "none";
+      document.getElementById("telaCadastro").style.display = tela === "cadastro" ? "block" : "none";
+      document.getElementById("telaDashboard").style.display = tela === "dashboard" ? "block" : "none";
+    }
+
+    function cadastrar() {
+      const usuario = document.getElementById("cadUsuario").value;
+      const senha = document.getElementById("cadSenha").value;
+      const usuarios = JSON.parse(localStorage.getItem(usuariosKey)) || [];
+
+      if (usuarios.find(u => u.usuario === usuario)) {
+        alert("Usuário já existe!");
+        return;
+      }
+
+      usuarios.push({ usuario, senha });
+      localStorage.setItem(usuariosKey, JSON.stringify(usuarios));
+      alert("Usuário cadastrado com sucesso!");
+      mostrar("login");
+    }
+
+    function login() {
+      const usuario = document.getElementById("loginUsuario").value;
+      const senha = document.getElementById("loginSenha").value;
+      const usuarios = JSON.parse(localStorage.getItem(usuariosKey)) || [];
+      const encontrado = usuarios.find(u => u.usuario === usuario && u.senha === senha);
+
+      if (encontrado) {
+        localStorage.setItem(loginKey, JSON.stringify(encontrado));
+        mostrar("dashboard");
+        renderizarTabela();
+      } else {
+        alert("Usuário ou senha inválidos!");
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem(loginKey);
+      mostrar("login");
+    }
+
+    function salvarProduto() {
+      const id = document.getElementById("idProduto").value;
+      const nome = document.getElementById("nome").value;
+      const preco = document.getElementById("preco").value;
+      const quantidade = document.getElementById("quantidade").value;
+
+      if (id === "") {
+        produtos.push({ nome, preco, quantidade });
+      } else {
+        produtos[id] = { nome, preco, quantidade };
+      }
+
+      localStorage.setItem(produtosKey, JSON.stringify(produtos));
+      document.getElementById("idProduto").value = "";
+      document.getElementById("nome").value = "";
+      document.getElementById("preco").value = "";
+      document.getElementById("quantidade").value = "";
+      renderizarTabela();
+    }
+
+    function editar(index) {
+      const p = produtos[index];
+      document.getElementById("idProduto").value = index;
+      document.getElementById("nome").value = p.nome;
+      document.getElementById("preco").value = p.preco;
+      document.getElementById("quantidade").value = p.quantidade;
+    }
+
+    function excluir(index) {
+      if (confirm("Deseja excluir este produto?")) {
+        produtos.splice(index, 1);
+        localStorage.setItem(produtosKey, JSON.stringify(produtos));
+        renderizarTabela();
+      }
+    }
+
+    function renderizarTabela() {
+      const tabela = document.getElementById("tabelaProdutos");
+      tabela.innerHTML = "";
+      produtos.forEach((p, i) => {
+        tabela.innerHTML += `
+          <tr>
+            <td>${p.nome}</td>
+            <td>R$ ${parseFloat(p.preco).toFixed(2)}</td>
+            <td>${p.quantidade}</td>
+            <td class="btns">
+              <button onclick="editar(${i})">✏️</button>
+              <button onclick="excluir(${i})">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function gerarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("Relatório de Produtos - Acessórios Norte", 10, 10);
+      let y = 20;
+      produtos.forEach((p, i) => {
+        doc.text(`${i + 1}. ${p.nome} | R$ ${p.preco} | Qtd: ${p.quantidade}`, 10, y);
+        y += 10;
+      });
+      doc.save("relatorio_acessorios_norte.pdf");
+    }
+
+    window.onload = () => {
+      const user = JSON.parse(localStorage.getItem(loginKey));
+      if (user) {
+        mostrar("dashboard");
+        renderizarTabela();
+      } else {
+        mostrar("login");
+      }
+    };
+  </script>
+</body>
+</html>
